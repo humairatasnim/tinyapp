@@ -45,34 +45,10 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-app.get("/register", (req, res) => {
-  res.render("register");
-});
-
 app.post("/urls", (req, res) => {
   let id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
-});
-
-app.post("/register", (req, res) => {
-  
-  // Catch users trying to use blank email or passwords
-  if (req.body.email === '' || req.body.password === '') {
-    return res.status(400).send('Please fill all required fields.');
-  }
-
-  // Catch users already in database
-  if (getUserByEmail(req.body.email)) {
-    return res.status(400).send('Email already exists. Please try a different email.');
-  }
-
-  const id = generateRandomString();
-  const { email, password } = req.body;
-  const user = { id, email, password };
-  users[id] = user;
-  res.cookie('user_id', id);
-  res.redirect(`/urls`);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -100,10 +76,50 @@ app.post("/urls/:id", (req, res) => {
   res.redirect(`/urls`);
 });
 
+/**
+ * Register
+ */
+
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+
+app.post("/register", (req, res) => {
+  
+  // Catch users trying to use blank email or passwords
+  if (req.body.email === '' || req.body.password === '') {
+    return res.status(400).send('Please fill all required fields.');
+  }
+
+  // Catch users already in database
+  if (getUserByEmail(req.body.email)) {
+    return res.status(400).send('Email already exists. Please try a different email.');
+  }
+
+  const id = generateRandomString();
+  const { email, password } = req.body;
+  const user = { id, email, password };
+  users[id] = user;
+  res.cookie('user_id', id);
+  res.redirect(`/urls`);
+});
+
+/**
+ * Login
+ */
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect(`/urls`);
 });
+
+/**
+ * Logout
+ */
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
