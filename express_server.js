@@ -56,6 +56,17 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  
+  // Catch users trying to use blank email or passwords
+  if (req.body.email === '' || req.body.password === '') {
+    return res.status(400).send('Please fill all required fields.');
+  }
+
+  // Catch users already in database
+  if (getUserByEmail(req.body.email)) {
+    return res.status(400).send('Email already exists. Please try a different email.');
+  }
+
   const id = generateRandomString();
   const { email, password } = req.body;
   const user = { id, email, password };
@@ -105,4 +116,13 @@ app.listen(PORT, () => {
 
 let generateRandomString = function() {
   return Math.random().toString(36).slice(2, 8);
+};
+
+const getUserByEmail = function(email) {
+  for (const item in users) {
+    if (users[item].email === email) {
+      return item;
+    }
+  }
+  return null;
 };
