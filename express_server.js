@@ -29,9 +29,17 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+
+/**
+ * Urls
+ */
 
 app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
@@ -51,19 +59,19 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+/**
+ * Urls/Id
+ */
+
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: user };
   res.render("urls_show", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect(`/urls`);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -71,9 +79,9 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect(`/urls`);
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 /**
@@ -88,7 +96,7 @@ app.post("/register", (req, res) => {
   
   // Catch users trying to use blank email or passwords
   if (req.body.email === '' || req.body.password === '') {
-    return res.status(400).send('Please fill all required fields.');
+    return res.status(400).send('Please fill both email and password fields.');
   }
 
   // Catch users already in database
@@ -113,7 +121,20 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+
+  const user = getUserByEmail(req.body.email);
+ 
+  // Catch users not registered
+  if (user === null) {
+    return res.status(403).send('Email not found.');
+  }
+
+  // Check if passwords match
+  if (user.password !== req.body.password) {
+    return res.status(403).send('Incorrect password.');
+  }
+  
+  res.cookie('user_id', user.id);
   res.redirect(`/urls`);
 });
 
@@ -123,7 +144,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect(`/urls`);
+  res.redirect('/login');
 });
 
 app.listen(PORT, () => {
@@ -137,7 +158,7 @@ let generateRandomString = function() {
 const getUserByEmail = function(email) {
   for (const item in users) {
     if (users[item].email === email) {
-      return item;
+      return users[item];
     }
   }
   return null;
