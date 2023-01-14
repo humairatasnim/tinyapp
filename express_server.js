@@ -22,9 +22,20 @@ app.use(express.urlencoded({ extended: true }));
 // Database
 ////////////////////////////////////////////////////////////
 
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -147,7 +158,7 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   if (req.cookies.user_id) {
     let id = generateRandomString();
-    urlDatabase[id] = req.body.longURL;
+    urlDatabase[id].longURL = req.body.longURL;
     res.redirect(`/urls/${id}`);
   } else {
     res.send("<html><body>Unable to shorten URL since you are not logged in.</body></html>\n");
@@ -157,13 +168,13 @@ app.post("/urls", (req, res) => {
 // GET /urls/:id
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: user };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
   res.render("urls_show", templateVars);
 });
 
 // POST /urls/:id
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect('/urls');
 });
 
@@ -178,7 +189,7 @@ app.get("/u/:id", (req, res) => {
   if (!Object.keys(urlDatabase).includes(req.params.id)) {
     return res.send("<html><body>Sorry, we do not have this URL in our database.</body></html>\n");
   } else {
-    const longURL = urlDatabase[req.params.id];
+    const longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
   }
 });
