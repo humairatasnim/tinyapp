@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 
 ////////////////////////////////////////////////////////////
 // Configuration
@@ -113,8 +114,8 @@ app.post("/login", (req, res) => {
     return res.status(403).send("User does not exist.");
   }
 
-  // Check if passwords match
-  if (user.password !== password) {
+  // Check if passwords match bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword);
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Incorrect password. Please try again.");
   }
   
@@ -148,7 +149,8 @@ app.post("/register", (req, res) => {
   }
 
   const id = generateRandomString();
-  const user = { id, email, password };
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const user = { id: id, email: email, password: hashedPassword };
   users[id] = user;
   res.cookie('user_id', id);
   res.redirect('/urls');
