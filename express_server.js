@@ -1,5 +1,5 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 
 ////////////////////////////////////////////////////////////
@@ -16,7 +16,13 @@ app.set("view engine", "ejs");
 // Middleware
 ////////////////////////////////////////////////////////////
 
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['light', 'house', 'labs'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 app.use(express.urlencoded({ extended: true }));
 
 ////////////////////////////////////////////////////////////
@@ -80,7 +86,7 @@ const urlsForUser = (id) => {
 
 // GET /
 app.get("/", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
     res.redirect('/login');
@@ -89,10 +95,10 @@ app.get("/", (req, res) => {
 
 // GET /login
 app.get("/login", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
     const templateVars = { user: user };
     res.render("login", templateVars);
   }
@@ -113,16 +119,16 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Incorrect password. Please try again.");
   }
   
-  res.cookie('user_id', user.id);
+  req.session.user_id = user.id;
   res.redirect('/urls');
 });
 
 // GET /register
 app.get("/register", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
     const templateVars = { user: user };
     res.render("register", templateVars);
   }
@@ -146,20 +152,20 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const user = { id: id, email: email, password: hashedPassword };
   users[id] = user;
-  res.cookie('user_id', id);
+  req.session.user_id = id;
   res.redirect('/urls');
 });
 
 // POST /logout
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/login');
 });
 
 // GET /urls
 app.get("/urls", (req, res) => {
-  if (req.cookies.user_id) {
-    const user = users[req.cookies.user_id];
+  if (req.session.user_id) {
+    const user = users[req.session.user_id];
     const urls = urlsForUser(user.id);
     const templateVars = { urls: urls, user: user };
     res.render("urls_index", templateVars);
@@ -170,8 +176,8 @@ app.get("/urls", (req, res) => {
 
 // GET /urls/new
 app.get("/urls/new", (req, res) => {
-  if (req.cookies.user_id) {
-    const user = users[req.cookies.user_id];
+  if (req.session.user_id) {
+    const user = users[req.session.user_id];
     const templateVars = { user: user };
     res.render("urls_new", templateVars);
   } else {
@@ -181,7 +187,7 @@ app.get("/urls/new", (req, res) => {
 
 // POST /urls
 app.post("/urls", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     let id = generateRandomString();
     urlDatabase[id].longURL = req.body.longURL;
     res.redirect(`/urls/${id}`);
@@ -192,7 +198,7 @@ app.post("/urls", (req, res) => {
 
 // GET /urls/:id
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const urls = urlsForUser(user.id);
   if (Object.keys(urls).includes(req.params.id)) {
     const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
@@ -210,7 +216,7 @@ app.post("/urls/:id", (req, res) => {
     return res.send("<html><body>Sorry, we do not have this URL in our database.</body></html>\n");
   }
   
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   
   // Return error message if the user is not logged in
   if (!user) {
@@ -237,7 +243,7 @@ app.post("/urls/:id/delete", (req, res) => {
     return res.send("<html><body>Sorry, we do not have this URL in our database.</body></html>\n");
   }
   
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   
   // Return error message if the user is not logged in
   if (!user) {
