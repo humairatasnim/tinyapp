@@ -148,7 +148,7 @@ app.get("/urls", (req, res) => {
     return res.status(400).send('You are not logged in. Please log in or register to continue.');
   }
 
-  const urls = urlsForUser(user.id);
+  const urls = urlsForUser(user.id, urlDatabase);
   const templateVars = { urls: urls, user: user };
   res.render("urls_index", templateVars);
 });
@@ -197,7 +197,7 @@ app.get("/urls/:id", (req, res) => {
     return res.status(400).send('You are not logged in.');
   }
   
-  const urls = urlsForUser(user.id);
+  const urls = urlsForUser(user.id, urlDatabase);
   const url = urls[req.params.id];
   
   // Return error message if the user does not own the URL
@@ -224,7 +224,7 @@ app.post("/urls/:id", (req, res) => {
     return res.status(400).send('You are not logged in.');
   }
   
-  const urls = urlsForUser(user.id);
+  const urls = urlsForUser(user.id, urlDatabase);
   const url = urls[req.params.id];
   
   // Return error message if the user does not own the URL
@@ -252,7 +252,7 @@ app.post("/urls/:id/delete", (req, res) => {
     return res.status(400).send('You are not logged in.');
   }
   
-  const urls = urlsForUser(user.id);
+  const urls = urlsForUser(user.id, urlDatabase);
   const url = urls[req.params.id];
   
   // Return error message if the user does not own the URL

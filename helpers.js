@@ -13,7 +13,7 @@ const getUserByEmail = (email, database) => {
 };
 
 const urlsForUser = (id, database) => {
-  let filteredURLs;
+  let filteredURLs = {};
   for (const key in database) {
     if (database[key].userID === id) {
       filteredURLs[key] = database[key];
