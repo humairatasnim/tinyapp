@@ -97,7 +97,9 @@ app.get("/login", (req, res) => {
   if (req.cookies.user_id) {
     res.redirect('/urls');
   } else {
-    res.render("login");
+    const user = users[req.cookies.user_id];
+    const templateVars = { user: user };
+    res.render("login", templateVars);
   }
 });
 
@@ -125,7 +127,9 @@ app.get("/register", (req, res) => {
   if (req.cookies.user_id) {
     res.redirect('/urls');
   } else {
-    res.render("register");
+    const user = users[req.cookies.user_id];
+    const templateVars = { user: user };
+    res.render("register", templateVars);
   }
 });
 
